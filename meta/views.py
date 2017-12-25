@@ -12,34 +12,40 @@ class Meta(object):
     _keywords = []
     _url = None
     _image = None
+    _defaults = {
+        'use_sites': 'USE_SITES',
+        'title': None,
+        'description': None,
+        'extra_props': None,
+        'extra_custom_props': None,
+        'custom_namespace': 'OG_NAMESPACES',
+        'keywords': None,
+        'url': None,
+        'image': None,
+        'object_type': 'SITE_TYPE',
+        'site_name': 'SITE_NAME',
+        'twitter_site': None,
+        'twitter_creator': None,
+        'twitter_card': None,
+        'facebook_app_id': None,
+        'locale': None,
+        'use_og': 'USE_OG_PROPERTIES',
+        'use_twitter': 'USE_TWITTER_PROPERTIES',
+        'use_facebook': 'USE_FACEBOOK_PROPERTIES',
+        'use_googleplus': 'USE_GOOGLEPLUS_PROPERTIES',
+        'use_title_tag': 'USE_TITLE_TAG',
+        'gplus_type': 'GPLUS_TYPE',
+        'gplus_publisher': 'GPLUS_PUBLISHER',
+        'gplus_author': 'GPLUS_AUTHOR',
+        'fb_pages': 'FB_PAGES',
+        'og_app_id': 'FB_APPID',
+    }
 
     def __init__(self, **kwargs):
-        self.use_sites = kwargs.get('use_sites', settings.USE_SITES)
-        self.title = kwargs.get('title')
-        self.description = kwargs.get('description')
-        self.extra_props = kwargs.get('extra_props')
-        self.extra_custom_props = kwargs.get('extra_custom_props')
-        self.custom_namespace = kwargs.get('custom_namespace', settings.OG_NAMESPACES)
-        self.keywords = kwargs.get('keywords')
-        self.url = kwargs.get('url')
-        self.image = kwargs.get('image')
-        self.object_type = kwargs.get('object_type', settings.SITE_TYPE)
-        self.site_name = kwargs.get('site_name', settings.SITE_NAME)
-        self.twitter_site = kwargs.get('twitter_site')
-        self.twitter_creator = kwargs.get('twitter_creator')
-        self.twitter_card = kwargs.get('twitter_card')
-        self.facebook_app_id = kwargs.get('facebook_app_id')
-        self.locale = kwargs.get('locale')
-        self.use_og = kwargs.get('use_og', settings.USE_OG_PROPERTIES)
-        self.use_twitter = kwargs.get('use_twitter', settings.USE_TWITTER_PROPERTIES)
-        self.use_facebook = kwargs.get('use_facebook', settings.USE_FACEBOOK_PROPERTIES)
-        self.use_googleplus = kwargs.get('use_googleplus', settings.USE_GOOGLEPLUS_PROPERTIES)
-        self.use_title_tag = kwargs.get('use_title_tag', settings.USE_TITLE_TAG)
-        self.gplus_type = kwargs.get('gplus_type', settings.GPLUS_TYPE)
-        self.gplus_publisher = kwargs.get('gplus_publisher', settings.GPLUS_PUBLISHER)
-        self.gplus_author = kwargs.get('gplus_author', settings.GPLUS_AUTHOR)
-        self.fb_pages = kwargs.get('fb_pages', settings.FB_PAGES)
-        self.og_app_id = kwargs.get('og_app_id', settings.FB_APPID)
+        for key, setting_name in self._defaults.items():
+            default_value = getattr(settings, setting_name) if setting_name else None
+            value = kwargs.get(key, default_value)
+            setattr(self, key, value)
 
     def get_domain(self):
         if self.use_sites:
@@ -115,6 +121,14 @@ class Meta(object):
             if not image.startswith('http') and not image.startswith('/'):
                 image = '%s%s' % (settings.IMAGE_URL, image)
             self._image = self.get_full_url(image)
+
+    def merge(self, meta):
+        kwargs = {key: getattr(self, key) for key in self._defaults.keys()}
+        for key in self._defaults.keys():
+            new_value = getattr(meta, key)
+            if new_value:
+                kwargs[key] = new_value
+        return self.__class__(**kwargs)
 
 
 class MetadataMixin(object):
